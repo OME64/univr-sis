@@ -2,6 +2,7 @@
 Elaborato SIS anno 2022-2023
 
 Specifiche:
+
 Si progetti un dispositivo per la gestione di un parcheggio con ingresso/uscita automatizzati.
 Il parcheggio è suddiviso in 3 settori: i settori A e B hanno 31 posti macchina ciascuno, mentre il settore C ha 24 posti macchina. Al momento dell’ingresso l’utente deve dichiarare in quale settore vuole parcheggiare, analogamente al momento dell’uscita l’utente deve dichiarare da quale settore proviene.
 Il parcheggio rimane libero durante la notte, permettendo a tutte le macchine di entrare e uscire a piacimento. La mattina il dispositivo viene attivato manualmente da un operatore inserendo la sequenza di 5 bit 11111. Al ciclo successivo il sistema attende l’inserimento del numero di automobili presenti nel settore A (sempre in 5 bit) e ne memorizza il valore. Nei due cicli successivi avviene lo stesso per i settori B e C. Nel caso in cui il valore inserito superi il numero di posti macchina nel relativo settore si considerino tutti i posti occupati.
