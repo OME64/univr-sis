@@ -1,9 +1,0 @@
-.model register1
-.inputs I
-.outputs O
-
-
-.latch I O re NIL 0
-
-.end
-
