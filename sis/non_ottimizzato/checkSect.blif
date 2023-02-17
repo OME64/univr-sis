@@ -1,0 +1,11 @@
+.model checkSect
+.inputs I2 I1 I0
+.outputs O
+
+.names I2 I1 I0 O
+100 0
+010 0
+001 0
+
+
+.end

@@ -1,0 +1,102 @@
+.model datapath
+.inputs FSM2 FSM1 FSM0 IN OUT SECTOR_A SECTOR_B SECTOR_C
+.outputs SETTORE_NON_VALIDO SBARRA_IN SBARRA_OUT SEC_A SEC_B SEC_C
+
+#definisco le costanti
+.subckt zero O=CONSTANT_0
+.subckt one O=CONSTANT_1
+
+#mux dei primi 3 cicli di clock
+.subckt mux2 S=FSM2 A4=IN A3=OUT A2=SECTOR_A A1=SECTOR_B A0=SECTOR_C B4=O4_FINAL_MUX B3=O3_FINAL_MUX B2=O2_FINAL_MUX B1=O1_FINAL_MUX B0=O0_FINAL_MUX O4=O4_CLOCK_MUX O3=O3_CLOCK_MUX O2=O2_CLOCK_MUX O1=O1_CLOCK_MUX O0=O0_CLOCK_MUX
+
+#uso la funzione overflowC prima di inviare l'input in C
+.subckt overflowC I4=O4_CLOCK_MUX I3=O3_CLOCK_MUX I2=O2_CLOCK_MUX I1=O1_CLOCK_MUX I0=O0_CLOCK_MUX O4=O4_OVERFLOW O3=O3_OVERFLOW O2=O2_OVERFLOW O1=O1_OVERFLOW O0=O0_OVERFLOW
+
+#demux di selezione del registro
+.subckt demux1 S1=FSM1 S0=FSM0 I=CONSTANT_1 O3=O_SELECTION_REG_A O2=O_SELECTION_REG_B O1=O_SELECTION_REG_C O0=O_TRASH_DEMUX_D
+
+#mux di scrittura del nuovo valore o del precendente
+.subckt mux2 S=O_SELECTION_REG_A A4=O4_REG_A A3=O3_REG_A A2=O2_REG_A A1=O1_REG_A A0=O0_REG_A B4=O4_CLOCK_MUX B3=O3_CLOCK_MUX B2=O2_CLOCK_MUX B1=O1_CLOCK_MUX B0=O0_CLOCK_MUX O4=O4_MUX_A O3=O3_MUX_A O2=O2_MUX_A O1=O1_MUX_A O0=O0_MUX_A #A
+.subckt mux2 S=O_SELECTION_REG_B A4=O4_REG_B A3=O3_REG_B A2=O2_REG_B A1=O1_REG_B A0=O0_REG_B B4=O4_CLOCK_MUX B3=O3_CLOCK_MUX B2=O2_CLOCK_MUX B1=O1_CLOCK_MUX B0=O0_CLOCK_MUX O4=O4_MUX_B O3=O3_MUX_B O2=O2_MUX_B O1=O1_MUX_B O0=O0_MUX_B #B
+.subckt mux2 S=O_SELECTION_REG_C A4=O4_REG_C A3=O3_REG_C A2=O2_REG_C A1=O1_REG_C A0=O0_REG_C B4=O4_OVERFLOW B3=O3_OVERFLOW B2=O2_OVERFLOW B1=O1_OVERFLOW B0=O0_OVERFLOW O4=O4_MUX_C O3=O3_MUX_C O2=O2_MUX_C O1=O1_MUX_C O0=O0_MUX_C		 #C
+
+#inserisco i dati nel registro
+.subckt register5 I4=O4_MUX_A I3=O3_MUX_A I2=O2_MUX_A I1=O1_MUX_A I0=O0_MUX_A O4=O4_REG_A O3=O3_REG_A O2=O2_REG_A O1=O1_REG_A O0=O0_REG_A #registro A
+.subckt register5 I4=O4_MUX_B I3=O3_MUX_B I2=O2_MUX_B I1=O1_MUX_B I0=O0_MUX_B O4=O4_REG_B O3=O3_REG_B O2=O2_REG_B O1=O1_REG_B O0=O0_REG_B #registro B
+.subckt register5 I4=O4_MUX_C I3=O3_MUX_C I2=O2_MUX_C I1=O1_MUX_C I0=O0_MUX_C O4=O4_REG_C O3=O3_REG_C O2=O2_REG_C O1=O1_REG_C O0=O0_REG_C #registro C
+
+#mux controllo primi 3 cicli
+.subckt mux1 S1=FSM1 S0=FSM0 I3=CONSTANT_0 I2=CONSTANT_1 I1=CONSTANT_1 I0=CONSTANT_0 O=O_SELECTION_CAPACITY
+.subckt or A=FSM2 B=O_SELECTION_CAPACITY O=O_OR_CAPACITY
+
+################################################################################################################################################################
+
+#mux di controllo e per operazioni
+.subckt mux4 S1=FSM1 S0=FSM0 A4=O4_REG_A A3=O3_REG_A A2=O2_REG_A A1=O1_REG_A A0=O0_REG_A B4=O4_REG_B B3=O3_REG_B B2=O2_REG_B B1=O1_REG_B B0=O0_REG_B C4=O4_REG_C C3=O3_REG_C C2=O2_REG_C C1=O1_REG_C C0=O0_REG_C O4=O4_COMPUTING_MUX O3=O3_COMPUTING_MUX O2=O2_COMPUTING_MUX O1=O1_COMPUTING_MUX O0=O0_COMPUTING_MUX
+
+#controllo la validità dei settori e il loro spazio
+.subckt fullEmpty I1=IN I0=SECTOR_C IREG4=O4_COMPUTING_MUX IREG3=O3_COMPUTING_MUX IREG2=O2_COMPUTING_MUX IREG1=O1_COMPUTING_MUX IREG0=O0_COMPUTING_MUX O=O_FULLEMPTY
+.subckt checkSect I2=SECTOR_A I1=SECTOR_B I0=SECTOR_C O=O_CHECK_SECTOR
+.subckt xnor A=IN B=OUT O=O_XNOR
+
+#metto in or i risultati del fullEmpty e del checkSect
+.subckt or A=O_XNOR B=O_CHECK_SECTOR O=O_SECTOR
+.subckt or A=O_FULLEMPTY B=O_SECTOR O=O_SELECTION_SUM
+
+#sommo o sottrago
+.subckt operation S0=IN I4=O4_COMPUTING_MUX I3=O3_COMPUTING_MUX I2=O2_COMPUTING_MUX I1=O1_COMPUTING_MUX I0=O0_COMPUTING_MUX O4=O4_OPERATION O3=O3_OPERATION O2=O2_OPERATION O1=O1_OPERATION O0=O0_OPERATION
+
+#mux finale, questo mux essegue l'operazione oppure riscrive il valore iniziale in caso di errore
+.subckt mux2 S=O_SELECTION_SUM A4=O4_OPERATION A3=O3_OPERATION A2=O2_OPERATION A1=O1_OPERATION A0=O0_OPERATION B4=O4_COMPUTING_MUX B3=O3_COMPUTING_MUX B2=O2_COMPUTING_MUX B1=O1_COMPUTING_MUX B0=O0_COMPUTING_MUX O4=O4_FINAL_MUX O3=O3_FINAL_MUX O2=O2_FINAL_MUX O1=O1_FINAL_MUX O0=O0_FINAL_MUX
+
+#controllo l'uguaglinza con gli estremi del registro
+.subckt equality A4=CONSTANT_1 A3=CONSTANT_1 A2=CONSTANT_1 A1=CONSTANT_1 A0=CONSTANT_1 B4=O4_MUX_A B3=O3_MUX_A B2=O2_MUX_A B1=O1_MUX_A B0=O0_MUX_A O=O_EQUALITY_A
+.subckt equality A4=CONSTANT_1 A3=CONSTANT_1 A2=CONSTANT_1 A1=CONSTANT_1 A0=CONSTANT_1 B4=O4_MUX_B B3=O3_MUX_B B2=O2_MUX_B B1=O1_MUX_B B0=O0_MUX_B O=O_EQUALITY_B
+.subckt equality A4=CONSTANT_1 A3=CONSTANT_1 A2=CONSTANT_0 A1=CONSTANT_0 A0=CONSTANT_0 B4=O4_MUX_C B3=O3_MUX_C B2=O2_MUX_C B1=O1_MUX_C B0=O0_MUX_C O=O_EQUALITY_C
+
+################################################################################################################################################################
+
+#output settore non valido
+.subckt and A=O_CHECK_SECTOR B=FSM2 O=SETTORE_NON_VALIDO
+
+#output sbarra IN e OUT
+.subckt inequality A4=O4_FINAL_MUX A3=O3_FINAL_MUX A2=O2_FINAL_MUX A1=O1_FINAL_MUX A0=O0_FINAL_MUX B4=O4_COMPUTING_MUX B3=O3_COMPUTING_MUX B2=O2_COMPUTING_MUX B1=O1_COMPUTING_MUX B0=O0_COMPUTING_MUX O=O_INEQUALITY
+.subckt demux S=IN I=O_INEQUALITY O1=SBARRA_IN O0=SBARRA_OUT
+
+#esegueo in and l'output per segnare che il registro è pieno
+.subckt and A=O_OR_CAPACITY B=O_EQUALITY_A O=SEC_A
+.subckt and A=O_OR_CAPACITY B=O_EQUALITY_B O=SEC_B
+.subckt and A=O_OR_CAPACITY B=O_EQUALITY_C O=SEC_C
+
+.end
+
+#mux e demux
+.search mux1.blif
+.search mux2.blif
+.search mux4.blif
+.search demux.blif
+.search demux1.blif
+.search demux5.blif
+
+#porte logiche
+.search or.blif
+.search and.blif
+.search xnor.blif
+
+#operatori matematici
+.search equality.blif
+.search inequality.blif
+
+#costanti
+.search one.blif
+.search zero.blif
+
+#registri
+.search register1.blif
+.search register5.blif
+
+#componenti
+.search overflowC.blif
+.search fullEmpty.blif
+.search checkSect.blif
+.search operation.blif
